@@ -1,42 +1,8 @@
-import openai
-import requests
-
-def generate_prompt_chat_GPT(openai_key, model_reaction, student, reaction_steps, transformations, issues):
-    # Initialize OpenAI client with API key
-    client = openai.OpenAI(api_key=openai_key)
-
-    # Define your prompt
-    prompt_text = "Can you say - Hello world -?"
-
-    # Call the API
-    response = client.chat.completions.create(
-        model='gpt-3.5-turbo',
-        messages=[{"role": "user", "content": prompt_text}])
-    return response.choices[0].message.content
-
-
-def generate_prompt(hf_api_key, model, student, reaction_steps, transformations, issues):
-    model_name = "facebook/opt-1.3b"
-
-    API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
-    headers = {"Authorization": f"Bearer {hf_api_key}"}
-
-    prompt_text = "Can you say - Hello world -?"
-    payload = {"inputs": prompt_text, "parameters": {"max_new_tokens": 100}}
-
-    response = requests.post(API_URL, headers=headers, json=payload)
-
-    # Handle response errors
-    if response.status_code == 200:
-        return response.json()
-    elif response.status_code == 403:
-        return "Error 403: Invalid API token permissions. Check Hugging Face token settings."
-    elif response.status_code == 404:
-        return "Error 404: Model not found. Check model name on Hugging Face."
-    else:
-        return f"Error {response.status_code}: {response.text}"
+def generate_prompt(openai_key, model_reaction, student, reaction_steps, transformations, issues):
+    return "Function to be written, based on choise for AI model."
 
 def generate_feedback(openai_key,model,student,reaction_steps,transformations,issues):
+    """ Function to generate feedback based on the analysis of the student reaction mechanism and the selected exersice. """
     if reaction_steps[3] == False:
         return "Make sure you select the correct exercise. You do not start your mechanism with the correct reactants"
 
