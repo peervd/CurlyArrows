@@ -182,9 +182,10 @@ def individual_steps(model,student):
                 correct_exercise.append(True)
             else:
                 correct_exercise.append(False)
+
         if all(x == False for x in correct_exercise):
             exersice = False
-        
+    print(steps)
     return steps,model_reactions,student_reactions,exersice
 
 def reaction_transformations(model,student,steps):
@@ -192,6 +193,7 @@ def reaction_transformations(model,student,steps):
     transformations = []
     len_steps = len(model)
     first_step = False
+    print(seq)
     if seq[0][0] != 0:
         m = model['reactants'].get('arrows')
         s = student['reactants'].get('arrows')
