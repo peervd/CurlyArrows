@@ -6,7 +6,7 @@ def dict_exe(file_path):
     The keys are the row numbers (starting from 1), and the values are from the second column.
     """
     data_dict = {}
-    
+    print(file_path)
     with open(file_path, mode='r', encoding='utf-8') as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row
@@ -24,3 +24,19 @@ def exersices(number):
     code = java_code[number]
     return code
 
+def load_acid_base(file_path):
+    """
+    Reads a CSV file and converts it into a dictionary.
+    The keys are the row numbers (starting from 1), and the values are from the second column.
+    """
+    acid_base = []
+    
+    with open(file_path, mode='r', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        next(reader)
+        for row in reader:
+            print(row)
+            acid_base = [row[0],row[1]]
+            acid_base.append(acid_base) 
+    
+    return acid_base

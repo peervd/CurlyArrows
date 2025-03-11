@@ -1,6 +1,7 @@
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator,rdFMCS, BRICS
 from rdkit.DataStructs import TanimotoSimilarity
+from exersices_ORC import load_acid_base
 
 
 
@@ -211,7 +212,48 @@ def compare_reactions(model_list, student_list):
     """
     model_canonical = [canonicalize_reaction(rx) for rx in model_list]
     student_canonical = [canonicalize_reaction(rx) for rx in student_list]
-    individual_comparisons = [student_rx in model_canonical for student_rx in student_canonical]
+    acid_base = load_acid_base('list_acid_base.csv')
+    #individual_comparisons = [student_rx in model_canonical for student_rx in student_canonical]
+    individual_comparisons = []
+    for st_rx in student_canonical:
+        reactant,product = False,False
+        st_rx = st_rx.split('>>')
+        st_r = st_rx[0].split('.')
+        st_p = st_rx[1].split('.')
+        for m_rx in model_canonical:
+            m_rx = m_rx.split('>>')
+            m_r = m_rx[0].split('.')
+            m_p = m_rx[1].split('.')
+            bool_r = []
+            if any(x in m_r for x in st_r):
+                for x in st_r:
+                    if x in m_r:
+                        bool_r.append(True)
+                    elif [x in acid[0] for acid in acid_base] and any(acid[0] in m_r for acid in acid_base):
+                        bool_r.append(True)
+                    elif [x in acid[1] for acid in acid_base] and any(acid[1] in m_r for acid in acid_base):
+                        bool_r.append(True)
+                    else: 
+                        bool_r.append(False)
+            bool_p = []
+            if any(x in m_p for x in st_p):
+                for x in st_p:
+                    if x in m_p:
+                        bool_p.append(True)
+                    elif [x in acid[0] for acid in acid_base] and any(acid[0] in m_p for acid in acid_base):
+                        bool_p.append(True)
+                    elif [x in acid[1] for acid in acid_base] and any(acid[1] in m_p for acid in acid_base):
+                        bool_p.append(True)
+                    else: 
+                        bool_p.append(False)
+            if bool_r and bool_p:
+                if all(x == True for x in bool_r) and all(x == True for x in bool_p):
+                    individual_comparisons.append(True)
+                else:
+                    individual_comparisons.append(False)
+            
+        
+        
     matching_subsequences = find_longest_matching_sequences(model_canonical, student_canonical)
     
     return {

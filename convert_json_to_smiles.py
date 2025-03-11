@@ -205,4 +205,4 @@ def parse_json_to_smiles(json_string, struc = False):
         return smiles_dict,mol_struc
     elif struc == False:
         return smiles_dict
-
+    
