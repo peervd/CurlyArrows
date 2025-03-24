@@ -165,29 +165,51 @@ def canonicalize_reaction(smiles_reaction, sim_threshold=0.5):
     return f"{core_reactants_smiles}>>{core_products_smiles}"
 
 
-def find_longest_matching_sequences(model_canonical, student_canonical):
+def find_longest_matching_sequences(steps_dict):
     """Find the longest non-overlapping matching subsequences between the model and student's sequences, including shift."""
-    model_len = len(model_canonical)
-    student_len = len(student_canonical)
-    
+    steps = steps_dict.keys()
+    if all(steps_dict[s][1] == 'not_present' for s in steps):
+        non_overlapping_matches = []
+        return non_overlapping_matches
     matches = []
-    
-    for i in range(model_len):
-        for j in range(i + 1, model_len + 1):
-            sub_seq = model_canonical[i:j]
-            for k in range(student_len - len(sub_seq) + 1):
-                if student_canonical[k:k+len(sub_seq)] == sub_seq:
-                    shift = k - i  # Calculate shift
-                    matches.append((i, j - 1, shift))
-    
-    # Filter out overlapping sequences, keeping only the longest ones
+
+    for i,step in enumerate(steps):
+        
+        shift = step - steps_dict[step][1]
+        if steps_dict[step][0] == [True,True]:
+            matches.append((step,shift))
+        elif steps_dict[step][0] == [True,False]:
+            matches.append((step,shift))
+        elif steps_dict[step][0] == [False,True]:
+            matches.append((step+1,shift))
     non_overlapping_matches = []
-    matches.sort(key=lambda x: x[1] - x[0], reverse=True)  # Sort by length, longest first
     
-    for start, end, shift in matches:
-        if not any(s <= start <= e or s <= end <= e for s, e, _ in non_overlapping_matches):
-            non_overlapping_matches.append((start, end, shift))
+    # Initialize tracking variables
+    current_start = None
+    current_end = None
+    current_shift = None
+    non_overlapping_matches = []
+
+    for i, (step, shift) in enumerate(matches):
+
+        if current_start is None:
+            # Start a new sequence
+            current_start = step
+            current_end = step
+            current_shift = shift
+        elif step == current_end + 1:
+            current_end = step 
+        else:
+            # Store the completed sequence if it's not already present
+            new_sequence = (current_start, current_end, current_shift)
+            non_overlapping_matches.append(new_sequence)
+            
+            # Start a new sequence
+            current_start = step 
+            current_end = step + shift
+            current_shift = shift
     
+    print(non_overlapping_matches)
     return sorted(non_overlapping_matches)
 
 def compare_reactions(model_list, student_list):
@@ -213,50 +235,83 @@ def compare_reactions(model_list, student_list):
     model_canonical = [canonicalize_reaction(rx) for rx in model_list]
     student_canonical = [canonicalize_reaction(rx) for rx in student_list]
     acid_base = load_acid_base('list_acid_base.csv')
+
     #individual_comparisons = [student_rx in model_canonical for student_rx in student_canonical]
-    individual_comparisons = []
-    for st_rx in student_canonical:
-        reactant,product = False,False
+    individual_comparisons = {}
+    for st_numb,st_rx in enumerate(student_canonical):
         st_rx = st_rx.split('>>')
         st_r = st_rx[0].split('.')
         st_p = st_rx[1].split('.')
-        for m_rx in model_canonical:
+        reaction_found = False
+        for m_numb,m_rx in enumerate(model_canonical):
             m_rx = m_rx.split('>>')
             m_r = m_rx[0].split('.')
             m_p = m_rx[1].split('.')
             bool_r = []
+            r = []
+            bool_p = []
+            p = []
             if any(x in m_r for x in st_r):
                 for x in st_r:
                     if x in m_r:
                         bool_r.append(True)
+                        reactant = True
+                        r.append(x)
+                    
                     elif [x in acid[0] for acid in acid_base] and any(acid[0] in m_r for acid in acid_base):
                         bool_r.append(True)
-                    elif [x in acid[1] for acid in acid_base] and any(acid[1] in m_r for acid in acid_base):
+                        reactant = True
+                        r.append(x)
+                    
+                    elif [x in base[1] for base in acid_base] and any(base[1] in m_r for base in acid_base):
                         bool_r.append(True)
-                    else: 
-                        bool_r.append(False)
-            bool_p = []
+                        r.append(x)
+                        reactant = True
+                    
+            else: 
+                bool_r.append(False)
+
             if any(x in m_p for x in st_p):
                 for x in st_p:
                     if x in m_p:
                         bool_p.append(True)
+                        p.append(x)
+                        product = True
+                        
                     elif [x in acid[0] for acid in acid_base] and any(acid[0] in m_p for acid in acid_base):
                         bool_p.append(True)
-                    elif [x in acid[1] for acid in acid_base] and any(acid[1] in m_p for acid in acid_base):
+                        p.append(x)
+                        product = True
+                        
+                    elif [x in base[1] for base in acid_base] and any(base[1] in m_p for base in acid_base):
                         bool_p.append(True)
-                    else: 
-                        bool_p.append(False)
-            if bool_r and bool_p:
-                if all(x == True for x in bool_r) and all(x == True for x in bool_p):
-                    individual_comparisons.append(True)
-                else:
-                    individual_comparisons.append(False)
-            
-        
-        
-    matching_subsequences = find_longest_matching_sequences(model_canonical, student_canonical)
-    
-    return {
-        "individual_steps": individual_comparisons,
-        "matching_sequences": matching_subsequences
-    }
+                        p.append(x)
+                        product = True
+                        
+            else: 
+                bool_p.append(False)
+
+            if bool_r and bool_p and all(x == True for x in bool_r) and all(x == True for x in bool_p):
+                individual_comparisons[st_numb] = ([True,True],m_numb)
+                reaction_found = True
+                break
+
+            elif bool_r and bool_p and all(x == True for x in bool_r) and all(x == False for x in bool_p):
+                max_length = max([len(s) for s in m_r])
+                if max_length == max([len(s) for s in r]):
+                    individual_comparisons[st_numb] = ([True,False],m_numb)
+                    reaction_found = True
+                    break
+
+            elif bool_r and bool_p and all(x == False for x in bool_r) and all(x == True for x in bool_p):
+                max_length = max([len(s) for s in m_p])
+                if max_length == max([len(s) for s in p]):
+                    individual_comparisons[st_numb] = ([False,True],m_numb)
+                    reaction_found = True
+                    break
+        if reaction_found == False:
+            individual_comparisons[st_numb] = ([False,False],'not_present')
+    print(individual_comparisons)
+    matching_subsequences = find_longest_matching_sequences(individual_comparisons)
+
+    return {"individual_steps": individual_comparisons,"matching_sequences": matching_subsequences}

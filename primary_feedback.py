@@ -1,8 +1,13 @@
 
 def analysis_feedback(steps,transformations,mol_struc):
     issues = {'global':True,'mechanistic':True,'structure':True}
+    
+    s_keys = steps[0]['individual_steps'].keys()
+    steps_bool = []
+    for x in s_keys:
+        steps_bool.append(steps[0]['individual_steps'][x][0])
 
-    if any(x is False for x in steps[0]['individual_steps']):
+    if any(False in sublist for sublist in steps_bool):
         issues['global'] = False
 
     if any(x == False or isinstance(x, str) for z in transformations for y in z for x in y):

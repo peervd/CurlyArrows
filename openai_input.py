@@ -10,19 +10,31 @@ def generate_prompt(hf_api_key, model, student, reaction_steps, transformations,
 def generate_feedback(openai_key,model,student,reaction_steps,transformations,mol_struc,issues):
     if reaction_steps[3] == False:
         return "Make sure you select the correct exercise. You do not start your mechanism with the correct reactants"
-
+       
     """Generates structured feedback based on analysis."""
     if openai_key == False:
         feedback = "Your input was carefully analyzed and here is your feedback without openAI analysis.<br><br>"
         issue_list = list(issues.values())
         if all(x == True for x in issue_list):
             return "Your reaction mechanism is correct."
-    
+        
         if issues["global"] == False:
             incorrect_steps = []
-            for i,x in enumerate(reaction_steps[0]['individual_steps']):
-                if x == False:
+            s_keys = reaction_steps[0]['individual_steps'].keys()
+            steps_bool = []
+            for x in s_keys:
+                steps_bool.append(reaction_steps[0]['individual_steps'][x][0])
+
+            for i,x in enumerate(steps_bool):
+                if x[0] == True and x[1] == False:
+                    if all(x == True for y in transformations[i] for x in y):
+                        incorrect_steps.append(i+2)
+                    else:
+                        incorrect_steps.append(i+1)
+                elif x[0] == False and x[1] == False:
                     incorrect_steps.append(i+1)
+                    incorrect_steps.append(i+2)
+            incorrect_steps = [num for i, num in enumerate(incorrect_steps) if i == 0 or num != incorrect_steps[i-1] + 1]
             feedback += "The reaction mechanism does not follow the correct steps:<br>"
             if len(incorrect_steps) == 1:
                 feedback += "Step %s does not correspond with the model answer.<br>" % str(incorrect_steps).replace('[','').replace(']','')
@@ -31,9 +43,17 @@ def generate_feedback(openai_key,model,student,reaction_steps,transformations,mo
     
         if issues["mechanistic"] == False: 
             correct_arrows = {}
+
             for i,x in enumerate(transformations):
                 if any(x != True for x in x[0]):
-                    correct_arrows[i+1] = x[0]
+                    if 'internal electron movement' in x[0]:
+                        n_arrows = len(x[0])
+                        for trans in x[0]:
+                            if trans != "internal electron movement":
+                                print(trans)
+                                arrow = trans
+                        correct_arrows[i+1] = [arrow] * n_arrows
+                    print(x[0])
             feedback += "<br>Please pay attention to the electron flow (curly arrows):<br>"
             k = list(correct_arrows.keys())
 
