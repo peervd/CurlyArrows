@@ -158,7 +158,6 @@ def reaction_rules(arrows,reaction):
                 reaction_type.append('nucleophilic attack')
                 continue 
 
-
     return reaction_type
 
 def reaction_arrow_check(steps,arrows):
@@ -265,7 +264,7 @@ def compare_arrows(model_arrows, student_arrows,model_reaction,student_reaction)
             model_operation = reaction_rules(long_arr,model_reaction)
             student_operation = reaction_rules(short_arr,student_reaction)
             matches = [model_operation,student_operation]
-            if matches[0] == matches[1]:
+            if matches[0] == matches[1] or all(item == 'proton transfer' for y in matches for item in y):
                 matches = [[True,True],[True,True]]
                 step_correctness = True
 
@@ -273,7 +272,7 @@ def compare_arrows(model_arrows, student_arrows,model_reaction,student_reaction)
             model_operation = reaction_rules(short_arr,model_reaction)
             student_operation = reaction_rules(long_arr,student_reaction)
             matches = [model_operation,student_operation]
-            if matches[0] == matches[1]:
+            if matches[0] == matches[1] or all(item == 'proton transfer' for y in matches for item in y):
                 matches = [[True,True],[True,True]]
                 step_correctness = True
     

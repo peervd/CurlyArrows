@@ -2,7 +2,7 @@ import json
 from rdkit import Chem
 from rdkit.Chem import rdchem
 from molecular_structures import getSubmolRadAtom, getSubmolRadBond, getRadBond
-from helper_functions import validate_arrows,sort_list_tuple
+from helper_functions import validate_arrows,sort_list_tuple,pathway_difference
 
 from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
@@ -37,11 +37,14 @@ def molecule_key(molecules, synthetic, resonance, main, index, res_index, catego
                 continue
             avg_x = sum(x_positions) / len(x_positions)
             avg_y = sum(y_positions) / len(y_positions)
-            
+            y_arrows = []
+            for y_val in synthetic:
+                y_arrows.append(y_val[2])
+            multiple = pathway_difference(y_arrows)
             # Check if this molecule is between current and next synthetic arrow horizontally
             # and if it's below the average y position of synthetic arrows
             if s0 < avg_x < s1:
-                if avg_y > synthetic[index][2] + 50:  # Threshold for considering "below main chain"
+                if avg_y > synthetic[index][2] + 50 and multiple == True:  # Threshold for considering "below main chain"
                     has_lower_pathway = True
                     break
 

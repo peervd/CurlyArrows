@@ -1,6 +1,13 @@
 from collections import Counter
 from difflib import SequenceMatcher
 
+def pathway_difference(values, threshold=50):
+    for i in range(len(values)):
+        for j in range(i + 1, len(values)):
+            if abs(values[i] - values[j]) > threshold:
+                return True
+    return False
+
 def validate_arrows(vectors):
     """
     Validates vectors based on their categories:

@@ -250,7 +250,7 @@ class ExerciseGUI(QWidget):
             return
         try:
             output = analyze(ai_key, self.selected_exercise, json_code)
-            formatted_output = f"<p style='font-size:10pt; color: #B0E686; font-family: Consolas;'>{output}</p>"
+            formatted_output = f"<p style='font-size:11pt; color: #B0E686; font-family: Consolas;'>{output}</p>"
             self.output_text.setHtml(formatted_output)
         except Exception as e:
             self.output_text.setText(f"Error: {str(e)}")
