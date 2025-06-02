@@ -46,7 +46,6 @@ def load_acid_base(file_path):
     The keys are the row numbers (starting from 1), and the values are from the second column.
     """
     acid_base = []
-    
     with open(file_path, mode='r', encoding='utf-8') as file:
         reader = csv.reader(file)
         next(reader)

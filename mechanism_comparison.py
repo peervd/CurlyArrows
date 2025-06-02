@@ -1,170 +1,13 @@
+import numpy as np
 from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator,rdFMCS, BRICS
-from rdkit.DataStructs import TanimotoSimilarity
+from rdkit.Chem import rdFingerprintGenerator
 from exersices_ORC import load_acid_base
-from compare_molecular_structures import compare_molecules
-import re
+from helper_functions import count_trues, _split_reaction,all_lists_empty
+from molecular_structures import sanitize_hypervalent_smiles, create_mol_safely, combined_similarity, get_candidate_fragments, compare_molecules
 
 from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
 
-def sanitize_hypervalent_smiles(smiles):
-    """
-    Preprocess SMILES strings with hypervalent atoms to make them compatible with RDKit.
-    This function implements strategies to handle molecules where atoms exceed normal valence.
-    
-    Strategies include:
-    1. Converting charged carbon centers to neutral forms with appropriate valence
-    2. Adding explicit hydrogens where needed
-    3. Using wildcard atoms for problematic centers
-    
-    Parameters:
-      smiles (str): Original SMILES string that may contain hypervalent atoms
-      
-    Returns:
-      str: Modified SMILES string that RDKit can parse
-    """
-    # Strategy 1: Handle hypervalent charged carbons like [C+](C)(C)(C)(C)C
-    # Convert patterns like [C+](X)(X)(X)(X)X to [C+](X)(X)(X)X-X
-    pattern = r'\[C\+\](\([^)]+\)){5,}'
-    while re.search(pattern, smiles):
-        match = re.search(pattern, smiles)
-        if match:
-            start, end = match.span()
-            # Extract the excessive bonds and convert to a more reasonable form
-            excessive_part = smiles[start:end]
-            # Count the number of parentheses groups
-            groups = re.findall(r'\([^)]+\)', excessive_part)
-            if len(groups) > 4:  # If more than 4 bonds to carbon
-                # Keep 4 groups in the charged carbon, move others to separate bonds
-                modified = '[C+]' + ''.join(groups[:4])
-                remaining = '.'.join([g.strip('()') for g in groups[4:]])
-                smiles = smiles[:start] + modified + smiles[end:] + '.' + remaining
-    
-    # Strategy 2: Handle specific patterns like [H][OH+]C(C)(C)(C)(C)C
-    # Convert patterns with too many substituents on carbon
-    pattern = r'C(\([^)]+\)){5,}'
-    while re.search(pattern, smiles):
-        match = re.search(pattern, smiles)
-        if match:
-            start, end = match.span()
-            # Extract the excessive bonds and convert to a more reasonable form
-            excessive_part = smiles[start:end]
-            # Count the number of parentheses groups
-            groups = re.findall(r'\([^)]+\)', excessive_part)
-            if len(groups) > 4:  # If more than 4 bonds to carbon
-                # Keep carbon with 4 groups, separate others
-                modified = 'C' + ''.join(groups[:4])
-                remaining = '.'.join([g.strip('()') for g in groups[4:]])
-                smiles = smiles[:start] + modified + smiles[end:] + '.' + remaining
-    
-    # Strategy 3: Replace problematic charged structures with reasonable analogs
-    # Example: [C+](C)(C)(C)(C)C → C(C)(C)(C)C
-    smiles = re.sub(r'\[C\+\](\([^)]+\)){4,}', r'C\1', smiles)
-    
-    return smiles
-
-def create_mol_safely(smiles):
-    """
-    Attempt to create an RDKit molecule from a SMILES string, with fallbacks for problematic structures.
-    
-    Parameters:
-      smiles (str): SMILES string to convert to RDKit molecule
-      
-    Returns:
-      RDMol or None: RDKit molecule object, or None if all attempts fail
-    """
-    # First try normal parsing
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is not None:
-        return mol
-    
-    # If normal parsing fails, try sanitization with various options
-    try:
-        mol = Chem.MolFromSmiles(smiles, sanitize=False)
-        if mol is not None:
-            # Try to sanitize with as many properties as possible
-            sanitize_ops = Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_KEKULIZE
-            Chem.SanitizeMol(mol, sanitizeOps=sanitize_ops)
-            return mol
-    except:
-        pass
-    
-    # If still failing, try sanitize with more permissive valence checking
-    try:
-        mol = Chem.MolFromSmiles(smiles, sanitize=False)
-        if mol is not None:
-            # Try with even more limited sanitization
-            sanitize_ops = Chem.SanitizeFlags.SANITIZE_FINDRADICALS | \
-                          Chem.SanitizeFlags.SANITIZE_SETAROMATICITY | \
-                          Chem.SanitizeFlags.SANITIZE_SETCONJUGATION
-            Chem.SanitizeMol(mol, sanitizeOps=sanitize_ops)
-            return mol
-    except:
-        pass
-    
-    # Last attempt: preprocess the SMILES to handle hypervalent atoms
-    try:
-        sanitized_smiles = sanitize_hypervalent_smiles(smiles)
-        mol = Chem.MolFromSmiles(sanitized_smiles)
-        return mol
-    except:
-        return None
-
-def compute_substructure_score(mol1, mol2, timeout=1):
-    """
-    Compute a substructure similarity score based on the maximum common substructure (MCS).
-    The score is defined as:
-         score = (number of atoms in MCS) / (min(number of atoms in mol1, mol2))
-    If no MCS is found, the score is 0.
-    """
-    res = rdFMCS.FindMCS([mol1, mol2], timeout=timeout)
-    if res.canceled or res.numAtoms == 0:
-        return 0.0
-    return res.numAtoms / min(mol1.GetNumAtoms(), mol2.GetNumAtoms())
-
-def combined_similarity(mol1, mol2, fp1, fp2):
-    """
-    Combine the Tanimoto similarity of Morgan fingerprints and an MCS-based substructure score.
-    Here we take the maximum of the two scores.
-    """
-    t_sim = TanimotoSimilarity(fp1, fp2)
-    s_sim = compute_substructure_score(mol1, mol2)
-    return max(t_sim, s_sim)
-
-def get_candidate_fragments(smi, min_atoms=4):
-    """
-    For a given molecule SMILES, return a set of candidate fragments.
-    Always include the parent canonical SMILES.
-    If the molecule has at least `min_atoms` heavy atoms,
-    add its BRICS fragments (if any).
-    """
-    candidates = set()
-    mol = create_mol_safely(smi)
-
-    if mol is None:
-        # Even with sanitization, we couldn't create a valid molecule
-        # Add the original SMILES as a last resort
-        candidates.add(smi)
-        return candidates
-    
-    try:
-        parent = Chem.MolToSmiles(mol, canonical=True)
-        candidates.add(parent)
-    except:
-        # If canonicalization fails, use the original SMILES
-        candidates.add(smi)
-    
-    # Only fragment if the molecule is sufficiently large.
-    if mol.GetNumHeavyAtoms() >= min_atoms:
-        try:
-            frags = BRICS.BRICSDecompose(mol)
-            # BRICSDecompose returns a set of fragment SMILES.
-            candidates.update(frags)
-        except Exception as e:
-            pass
-
-    return candidates
 
 def canonicalize_reaction(smiles_reaction, sim_threshold=0.5):
     """
@@ -185,13 +28,10 @@ def canonicalize_reaction(smiles_reaction, sim_threshold=0.5):
       str: Canonical reaction SMILES including only the core transformation.
     """
     try:
-        reactants_str, products_str = smiles_reaction.split(">>")
+        reactant_smiles,product_smiles = _split_reaction(smiles_reaction)
     except Exception as e:
         raise ValueError("Reaction SMILES must contain '>>' separating reactants and products.")
 
-    reactant_smiles = reactants_str.split(".")
-    product_smiles = products_str.split(".")
-    
     # For each parent molecule, generate candidate fragments.
     reactant_candidates = {}  # key: parent SMILES, value: set of candidate SMILES
     product_candidates = {}
@@ -261,6 +101,7 @@ def canonicalize_reaction(smiles_reaction, sim_threshold=0.5):
                         continue
                     p_mol, p_fp = product_frag_data[p_cand]
                     sim = combined_similarity(r_mol, p_mol, r_fp, p_fp)
+
                     if sim >= sim_threshold:
                         involved_reactants.add(r_parent)
                         involved_products.add(p_parent)
@@ -304,185 +145,365 @@ def canonicalize_reaction(smiles_reaction, sim_threshold=0.5):
             if sanitized_r == sanitized_p:
                 involved_reactants.add(r_smi)
                 involved_products.add(p_smi)
-    
+    reactants = []
+    for x in involved_reactants:
+        try:
+            c = Chem.MolFromSmiles(x)
+            c = Chem.MolToSmiles(c)
+            reactants.append(c)
+        except:
+            reactants.append(x)
+    products = []
+    for x in involved_products:
+        try:
+            c = Chem.MolFromSmiles(x)
+            c = Chem.MolToSmiles(c)
+            products.append(c)
+        except:
+            products.append(x)
+     
     # Build the canonical reaction SMILES from the parent molecules that are involved.
-    core_reactants_smiles = ".".join(sorted(involved_reactants))
-    core_products_smiles = ".".join(sorted(involved_products))
+    core_reactants_smiles = ".".join(sorted(reactants))
+    core_products_smiles = ".".join(sorted(products))
     return f"{core_reactants_smiles}>>{core_products_smiles}"
 
 
 def find_longest_matching_sequences(steps_dict):
     """Find the longest non-overlapping matching subsequences between the model and student's sequences, including shift."""
-    steps = steps_dict.keys()
-    if all(steps_dict[s][1] == 'not_present' for s in steps):
+    steps = list(steps_dict.keys())
+    missing_steps = []
+    new_dict = {}
+    for x in steps:
+        if len(steps_dict[x]) > 1:
+            length = len(steps_dict[x])
+            if steps_dict[x][-1][0][1] == True:   # check if last step is True (for example product, or further reaction intermediate)
+                new_dict[x] = ([True,True],steps_dict[x][0][1])
+                miss_arr = np.arange(x+1,(x+length),1)
+                missing_steps.extend(miss_arr.tolist())
+            elif steps_dict[x][-1][0][1] == False:
+                new_dict[x] = ([True,False],steps_dict[x][0][1])
+                miss_arr = np.arange(x+2,(x+length),1)
+                missing_steps.extend(miss_arr.tolist())
+        elif steps_dict[x]:
+            new_dict[x] = steps_dict[x][0]
+        elif not steps_dict[x]:
+            steps.remove(x)
+            del steps_dict[x]
+    if all(new_dict[s][1] == 'not_present' for s in list(new_dict.keys())):
         non_overlapping_matches = []
         return non_overlapping_matches
     matches = []
+
     for i,step in enumerate(steps):
-        if steps_dict[step][1] == ('not_present'):
+        if new_dict[step][1] == ('not_present'):
             matches.append(('not_present',0))
+        elif new_dict[step][1] == ('no_chemical_transformations'):
+            pass
         else:
-            shift = step - steps_dict[step][1]
-            if steps_dict[step][0] == [True,True]:
+            shift = step - new_dict[step][1]
+            if new_dict[step][0] == [True,True]:
                 matches.append((step,shift))
-            elif steps_dict[step][0] == [True,False]:
+            elif new_dict[step][0] == [True,False]:
                 matches.append((step,shift))
-            elif steps_dict[step][0] == [False,True]:
+            elif new_dict[step][0] == [False,True]:
                 matches.append((step+1,shift))
-                
+
     # Initialize tracking variables
     current_start = None
     current_end = None
     current_shift = None
     non_overlapping_matches = []
 
+
     for i, (step, shift) in enumerate(matches):
+        # Helper function to check if values are consecutive integers
+        def is_consecutive(a, b):
+            if isinstance(a, str) or isinstance(b, str):
+                return False
+            return a == b + 1
+    
         if current_start is None:
             # Start a new sequence
             current_start = step
             current_end = step
             current_shift = shift
-        elif step == current_end + 1:
+        # Check if current step continues the sequence (both are integers and consecutive)
+        elif step != 'not_present' and current_end != 'not_present' and is_consecutive(step, current_end):
             current_end = step 
-        elif step == 'not_present' or step == len(matches)-1:
-            if current_start == 'not_present' and step != 'not_present':
-                new_sequence = (step, step, shift)
-            # Store the completed sequence if it's not already present
-            else:
+        else:
+            # Either we have a 'not_present' or values aren't consecutive
+            if current_start != 'not_present':
                 new_sequence = (current_start, current_end, current_shift)
-            non_overlapping_matches.append(new_sequence)
+                non_overlapping_matches.append(new_sequence)
             
-            # Start a new sequence
-            current_start = None 
-            current_end = None
-            current_shift = None
-    
+            # Start a new sequence if step is not 'not_present'
+            if step != 'not_present':
+                current_start = step
+                current_end = step
+                current_shift = shift
+            else:
+                current_start = None
+                current_end = None
+                current_shift = None
+
     if current_start != None and current_end != None and current_start != 'not_present' and current_end != 'not_present':
         only_sequence = (current_start, current_end, current_shift)
         non_overlapping_matches.append(only_sequence)
 
-    return sorted(non_overlapping_matches)
+    return sorted(non_overlapping_matches),missing_steps
 
-def compare_steps(model_canonical,student_canonical, acid_base):
+def compare_steps(model_canonical, student_canonical, acid_base):
+    """
+    Compare two lists of chemical reactions and determine how student reactions match with model reactions.
+    
+    Parameters:
+    - model_canonical: List of model reactions in SMILES format
+    - student_canonical: List of student reactions in SMILES format
+    - acid_base: List of acid/base pairs that can be substituted
+    
+    Returns:
+    - Dictionary with indices of student reactions as keys and matching information as values
+    """
+    # Get the lengths of both lists
+    st_len = len(student_canonical)
+    m_len = len(model_canonical)
+    
+    # Initialize the results dictionaries
     individual_comparisons = {}
     molecular_structure = {}
-    for st_numb,st_rx in enumerate(student_canonical):
-        st_rx = st_rx.split('>>')
-        st_r = st_rx[0].split('.')
-        st_p = st_rx[1].split('.')
-        reaction_found = False
-
-        charge_issues = []
-        for m_numb,m_rx in enumerate(model_canonical):
-            m_rx = m_rx.split('>>')
-            m_r = m_rx[0].split('.')
-            m_p = m_rx[1].split('.')
-            bool_r = []
-            r = []
-            bool_p = []
-            p = []
-            matching_mol = []
-            unique_mol = []
-
-            if any(x in m_r for x in st_r):
-                for x in st_r:
-                    if x in m_r:
-                        bool_r.append(True)
-                        reactant = True
-                        r.append(x)
-                        matching_mol.append(x)
-
-                    elif any(x in acid[0] for acid in acid_base) and any(acid[0] in m_r for acid in acid_base):
-                        bool_r.append(True)
-                        reactant = True
-                        r.append(x)
-                        matching_mol.append(x)
-                    elif any(x in base[1] for base in acid_base) and any(base[1] in m_r for base in acid_base):
-                        bool_r.append(True)
-                        r.append(x)
-                        reactant = True
-                        matching_mol.append(x)    
-                    else: 
-                        bool_r.append(False)
-                        unique_mol.append(x)
-            if any(x in m_p for x in st_p):
-                for x in st_p:
-                    if x in m_p:
-                        bool_p.append(True)
-                        p.append(x)
-                        product = True
-                        
-                    elif any(x in acid[0] for acid in acid_base) and any(acid[0] in m_p for acid in acid_base):
-                        bool_p.append(True)
-                        p.append(x)
-                        product = True
-                        
-                    elif any(x in base[1] for base in acid_base) and any(base[1] in m_p for base in acid_base):
-                        bool_p.append(True)
-                        p.append(x)
-                        product = True
-                        
-                    else: 
-                        bool_p.append(False)
-            unique_from_model = set(m_r) - set(matching_mol)
-
-            if unique_mol:
-                differences = []
-                if unique_from_model:
-                    for x in unique_mol:
-                        comparison = []
-                        for y in unique_from_model:
-                            comparison.append(compare_molecules(x,y))
-                        pri = 5
-                        for z in comparison:
-                            if z[0].endswith('_1') and pri > 0:
-                                diff = [z[0].strip('_1'),z[1]]
-                                pri = 0
-                            elif z[0].endswith('_2') and pri > 1:
-                                diff = [z[0].strip('_2'),z[1]]
-                                pri = 1
-                            elif z[0].endswith('_3') and pri > 2:
-                                diff = [z[0].strip('_3'),z[1]]
-                                pri = 2
-                            elif z[0].endswith('_4') and pri > 3:
-                                diff = [z[0].strip('_4'),z[1]]
-                                pri = 3
-                            elif z[0].endswith('_0') and pri > 4:
-                                diff = [z[0].strip('_0'),z[1]]
-                                pri = 4
-                            
-                        differences.append(diff)
-                    molecular_structure[st_numb] = differences
-                else:
-                    molecular_structure[st_numb] = ['molecule_not_present_in_model',sum(1 for atom in Chem.MolFromSmiles(unique_mol[0]).GetAtoms() if atom.GetSymbol() == 'C')]
+    product = False
+    # Parse all reactions once to avoid repeated parsing
+    model_reactions = []
+    for m_rx in model_canonical:
+        parts = m_rx.split('>>')
+        m_r = parts[0].split('.')
+        m_p = parts[1].split('.')
+        model_reactions.append((m_r, m_p))
     
-            if bool_r and bool_p and all(x == True for x in bool_r) and all(x == True for x in bool_p):
-                individual_comparisons[st_numb] = ([True,True],m_numb)
-                reaction_found = True
-                break
+    student_reactions = []
+    for st_rx in student_canonical:
+        parts = st_rx.split('>>')
+        st_r = parts[0].split('.')
+        st_p = parts[1].split('.')
+        student_reactions.append((st_r, st_p))
 
-            elif bool_r and bool_p and all(x == True for x in bool_r) and any(x == False for x in bool_p):
-                max_length = max([len(s) for s in m_r])
-                if max_length == max([len(s) for s in r]):
-                    individual_comparisons[st_numb] = ([True,False],m_numb)
+    # Determine which approach to use based on which list is longer
+    if st_len >= m_len:
+        # Case: Student has more or equal reactions compared to model
+        individual_comparisons = {key: [] for key in range(st_len)}
+        molecular_structure = {key: None for key in range(st_len)}
+        
+        for st_idx, (st_r, st_p) in enumerate(student_reactions):
+            reaction_found = False
+            if st_r == [''] and st_p == ['']:
+                individual_comparisons[st_idx] = [([False, False], 'no_chemical_transformations')]
+                continue
+            # Compare this student reaction with each model reaction
+            for m_idx, (m_r, m_p) in enumerate(model_reactions):
+                # Check reactants and products
+                r_match_info = check_molecules_match(st_r, m_r, acid_base)
+                p_match_info = check_molecules_match(st_p, m_p, acid_base)
+                
+                bool_r = r_match_info['all_match']
+                bool_p = p_match_info['all_match']
+                if m_len-1 == m_idx and bool_p == True:
+                    product = True
+                    
+                # Determine the overall match status
+                if bool_r and bool_p:
+                    individual_comparisons[st_idx] = [([True, True], m_idx)]
+                    
+                    
                     reaction_found = True
                     break
-
-            elif bool_r and bool_p and any(x == False for x in bool_r) and all(x == True for x in bool_p):
-                max_length = max([len(s) for s in m_p])
-                if max_length == max([len(s) for s in p]):
-                    individual_comparisons[st_numb] = ([False,True],m_numb)
+                elif bool_r:
+                    individual_comparisons[st_idx].append(([True, False], m_idx))
+                    if True in p_match_info['individual_matches'] and False in p_match_info['individual_matches'] and p_match_info['unique_molecules'] and p_match_info['unique_from_model']:
+                        differences = analyze_molecular_differences(
+                            p_match_info['unique_molecules'], 
+                            p_match_info['unique_from_model'])
+                        if all(x == None for x in differences):
+                            pass
+                        else:
+                            molecular_structure[st_idx+1] = differences
+                        
                     reaction_found = True
-                    break
+                    continue
+                elif bool_p:
+                    individual_comparisons[st_idx].append(([False, True], m_idx))
+
+                    reaction_found = True
+                    # If there's a mismatch, analyze the molecular differences
+                    
+                    if True in r_match_info['individual_matches'] and False in r_match_info['individual_matches'] and r_match_info['unique_molecules'] and r_match_info['unique_from_model']:
+                        if molecular_structure[st_idx] != None:
+                            pass
+                        else:
+                            differences = analyze_molecular_differences(
+                                r_match_info['unique_molecules'], 
+                                r_match_info['unique_from_model'])
+                            if all(x == None for x in differences):
+                                pass    
+                            else:
+                                molecular_structure[st_idx] = differences
+                        
+                    continue
             
+            # If no match found for this student reaction
+            if not reaction_found:
+                individual_comparisons[st_idx].append(([False, False], 'not_present'))
+                
+    
+    else:
+        # Case: Model has more reactions than student
+        individual_comparisons = {key: [] for key in range(st_len)}
+        molecular_structure = {key: None for key in range(st_len)}
 
-        if reaction_found == False:
-            individual_comparisons[st_numb] = ([False,False],'not_present')
+        for m_idx, (m_r, m_p) in enumerate(model_reactions):
+            reaction_found = False
 
-    return individual_comparisons,molecular_structure
+            for st_idx, (st_r, st_p) in enumerate(student_reactions):
+                # Skip if we already found a perfect match for this student reaction
+                if st_idx in individual_comparisons and individual_comparisons[st_idx] and individual_comparisons[st_idx][0][0] == [True, True]:
+                    continue
+                
+                # Check reactants and products
+                r_match_info = check_molecules_match(st_r, m_r, acid_base)
+                p_match_info = check_molecules_match(st_p, m_p, acid_base)
+                bool_r = r_match_info['all_match']
+                bool_p = p_match_info['all_match']
+                if m_len-1 == m_idx and bool_p == True:
+                    product = True
+                    
+                # Determine the overall match status
+                if bool_r and bool_p:
+                    individual_comparisons[st_idx] = [([True, True], m_idx)]
+                    
+                    reaction_found = True
+                    break
+                elif bool_r and (st_idx not in individual_comparisons or individual_comparisons[st_idx] != [([True, True], m_idx)]):
+                    individual_comparisons[st_idx].append(([True, False], m_idx))
+                    if True in p_match_info['individual_matches'] and False in p_match_info['individual_matches'] and p_match_info['unique_molecules'] and p_match_info['unique_from_model']:
+                        differences = analyze_molecular_differences(
+                            p_match_info['unique_molecules'], 
+                            p_match_info['unique_from_model'])
+                        if all(x == None for x in differences):
+                            pass    
+                        else:
+                            molecular_structure[st_idx+1] = differences
+                    
+                    reaction_found = True                   
+                    continue
+                elif bool_p and (st_idx not in individual_comparisons or individual_comparisons[st_idx] != [([True, True], m_idx)]):
+                    individual_comparisons[st_idx].append(([False, True], m_idx))
+                    
+                    reaction_found = True
+                    # If there's a mismatch, analyze the molecular differences
+                    if True in r_match_info['individual_matches'] and False in r_match_info['individual_matches'] and r_match_info['unique_molecules'] and r_match_info['unique_from_model']:
+                        if st_idx in list(molecular_structure.keys()):
+                            pass
+                        else:
+                            differences = analyze_molecular_differences(
+                                r_match_info['unique_molecules'], 
+                                r_match_info['unique_from_model'])
+                            if all(x == None for x in differences):
+                                pass    
+                            else:
+                                molecular_structure[st_idx] = differences 
+                    continue
+            # If no match found for this model reaction
+            if not reaction_found:
+                if all_lists_empty(individual_comparisons):
+                    individual_comparisons[0].append(([False, False], "not_present"))
+                else:
+                    ind_add = max([k for k, v in individual_comparisons.items() if v]) # find key in dict with a not empty list
+                    individual_comparisons[ind_add].append(([False, False], "not_present"))
+                
+    # Clean up the molecular structure dictionary
+    molecular_structure = {k: v for k, v in molecular_structure.items() if v is not None}
+    
+    # Add general information
+    general = {
+        "model_steps": m_len,
+        "student_steps": st_len,
+    }
+    
+    return individual_comparisons, molecular_structure, general, {"product":product}
 
-def count_trues(d):
-    return sum(value[0].count(True) for value in d.values())
+
+def check_molecules_match(molecules1, molecules2, acid_base):
+    """
+    Check how molecules from list1 match with molecules from list2, considering acid/base substitutions.
+    
+    Returns a dictionary with match information.
+    """
+    individual_matches = []
+    matching_molecules = []
+    unique_molecules = []
+    
+    for mol1 in molecules1:
+        if mol1 in molecules2:
+            individual_matches.append(True)
+            matching_molecules.append(mol1)
+        elif any(mol1 in acid[0] for acid in acid_base) and any(acid[0] in molecules2 for acid in acid_base):
+            individual_matches.append(True)
+            matching_molecules.append(mol1)
+        elif any(mol1 in base[1] for base in acid_base) and any(base[1] in molecules2 for base in acid_base):
+            individual_matches.append(True)
+            matching_molecules.append(mol1)
+        else:
+            individual_matches.append(False)
+            unique_molecules.append(mol1)
+    
+    unique_from_model = set(molecules2) - set(matching_molecules)
+    
+    return {
+        'individual_matches': individual_matches,
+        'all_match': all(individual_matches),
+        'matching_molecules': matching_molecules,
+        'unique_molecules': unique_molecules,
+        'unique_from_model': unique_from_model
+    }
+
+
+def analyze_molecular_differences(unique_molecules, unique_from_model):
+    """
+    Analyze differences between molecules that don't match directly.
+    """
+    if not unique_from_model:
+        # If there's no matching molecule in the model, report it
+        return ['molecule_not_present_in_model', sum(1 for atom in Chem.MolFromSmiles(unique_molecules[0]).GetAtoms() if atom.GetSymbol() == 'C')]
+    
+    differences = []
+    for mol in unique_molecules:
+        comparison = []
+        for model_mol in unique_from_model:
+            comparison.append(compare_molecules(mol, model_mol))
+        
+        # Find the best match based on priority
+        pri = 5
+        diff = None
+        for z in comparison:
+            if z[0].endswith('_1') and pri > 0:
+                diff = [z[0].strip('_1'), z[1]]
+                pri = 0
+            elif z[0].endswith('_2') and pri > 1:
+                diff = [z[0].strip('_2'), z[1]]
+                pri = 1
+            elif z[0].endswith('_3') and pri > 2:
+                diff = [z[0].strip('_3'), z[1]]
+                pri = 2
+            elif z[0].endswith('_4') and pri > 3:
+                diff = [z[0].strip('_4'), z[1]]
+                pri = 3
+            elif z[0].endswith('_0') and pri > 4:
+                pri = 4
+        
+        differences.append(diff)
+    
+    return differences
+
+
 
 def compare_reactions(model_list, student_list):
     """
@@ -505,24 +526,43 @@ def compare_reactions(model_list, student_list):
     somewhere in the student's list in the correct order. Reactants are always
     indexed as 0.
     """
-
     student_canonical = [canonicalize_reaction(rx) for rx in student_list]
-
     acid_base = load_acid_base('list_acid_base.csv')
     index_comp = False
+
     if isinstance(model_list, list) and all(isinstance(item, list) for item in model_list):
         lst_comparisons = []
+        mol_found = []
         for m_lst in model_list:
             model_canonical = [canonicalize_reaction(rx) for rx in m_lst]
             ind_comp = compare_steps(model_canonical,student_canonical,acid_base)
-            lst_comparisons.append(ind_comp)    
-        index_comp, individual_comparisons = max(enumerate(lst_comparisons), key=lambda x: count_trues(x[1]))
-    
-    else:            
+            lst_comparisons.append(ind_comp)
+                # Count keys in the second dictionary of each tuple
+        key_counts = [len(comparison[1]) for comparison in lst_comparisons]
+        
+        # Check if there's a tie for maximum number of keys
+        max_count = max(key_counts)
+        has_tie = key_counts.count(max_count) > 1
+        
+        if has_tie:
+            tied_indices = [i for i, count in enumerate(key_counts) if count == max_count]
+            
+            # Select the first one with max count if you need to choose one
+            index_comp = key_counts.index(max_count)
+            selected_comparison = lst_comparisons[index_comp]
+            individual_comparisons = lst_comparisons[index_comp]
+        else:
+            index_comp, individual_comparisons = max(enumerate(lst_comparisons), key=lambda x: count_trues(x[1]))
+
+    else:   
         model_canonical = [canonicalize_reaction(rx) for rx in model_list]
         individual_comparisons = compare_steps(model_canonical, student_canonical,acid_base)
 
     matching_subsequences = find_longest_matching_sequences(individual_comparisons[0])
 
-    return {"individual_steps": individual_comparisons[0],"matching_sequences": matching_subsequences,
-            "molecular_structures":individual_comparisons[1],"index_resonance": index_comp}
+    if not matching_subsequences:
+        return {"individual_steps": individual_comparisons[0],"matching_sequences": [],
+                "missing_steps":[],"molecular_structures":individual_comparisons[1],"index_resonance": index_comp, "product": individual_comparisons[3]["product"]}
+    else:
+        return {"individual_steps": individual_comparisons[0],"matching_sequences": matching_subsequences[0],
+                "missing_steps":matching_subsequences[1],"molecular_structures":individual_comparisons[1],"index_resonance": index_comp, "product": individual_comparisons[3]["product"]}

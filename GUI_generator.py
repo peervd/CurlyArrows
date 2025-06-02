@@ -12,7 +12,7 @@ from operate_analysis import analyze
 class ExerciseGUI(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Curly Arrows 0.1")
+        self.setWindowTitle("CurlyArrows")
         # Increase the window size to accommodate larger images
         self.setGeometry(100, 100, 900, 550)  
         # Updated icon path to use the GUI_images folder
