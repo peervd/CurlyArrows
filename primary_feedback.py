@@ -11,7 +11,6 @@ def analysis_feedback(steps,transformations,mol_struc):
             steps_bool.append(steps[0]['individual_steps'][x][0])
     
     if any(False in sublist for sublist in steps_bool):
-
         issues['global'] = False
     
     if steps[-1]['default'] == 'student_default':
@@ -32,7 +31,13 @@ def analysis_feedback(steps,transformations,mol_struc):
     if any(False in d.values() for d in mol_struc.values()) and len(steps[0]["molecular_structures"].keys()) > 0:
         issues['structure'] = False
         
-    if any(item[0] != True for item in steps[5]['resonance']) and steps[5]['resonance'] != ["no_resonance"]:
+    if steps[5]['resonance'] and any(item[0] != True for item in steps[5]['resonance']):
+        if steps[5]['resonance'] == ['no_resonance']:
+            pass
+        else:
+            issues['resonance'] = False
+    
+    if steps[5]['resonance_present'] == True and steps[5]['resonance'] != ["no_resonance"]:
         issues['resonance'] = False
-
+        
     return issues

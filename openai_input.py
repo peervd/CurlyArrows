@@ -219,19 +219,25 @@ def generate_feedback(openai_key,model,student,reaction_steps,transformations,mo
                             feedback += "Check the molecular structure of your intermediate with %s carbons in step %s. Here, the %s.<br>" %(structure_comparison[i][0][1],str(i + 1),structure_comparison[i][0][0])
                             
         if issues["resonance"] == False:
-            feedback += "<br>Include a correct resonance structure.<br>"
-            incorrect_steps = []
-            for key in reaction_steps[5]['resonance']:
-                key = key[1].split('_') 
-                incorrect_steps.append(int(key[1])+1)
-            if len(incorrect_steps) < 2:
-                feedback += "In step %s you do not include the correct resonance structure.<br>" % list_to_string(incorrect_steps)
-            else:
-                feedback += "In steps %s you do not include the correct resonance structure.<br>" % list_to_string(incorrect_steps)
-
             if reaction_steps[5]['resonance_present'] == False:
-                feedback += "Check in the exersice whether you should include a resonance structure."
-                
+                feedback += "<br>In this exercise resonance stabilization does not play a significant role. You should remove the resonance structure from your mechanism.<br>"
+            else:
+                feedback += "<br>Include a correct resonance structure.<br>"
+                incorrect_steps = []
+                for key in reaction_steps[5]['resonance']:
+                    if key == 'no_resonance' and reaction_steps[5]['resonance_present'] == True:
+                        feedback += "One of the intermediates is stabalized by resonance. Make sure to draw this structure below the respective molecule.<br>"
+                        break
+                    key = key[1].split('_') 
+                    incorrect_steps.append(int(key[1])+1)
+                if len(incorrect_steps) == 1:
+                    feedback += "In step %s you do not include the correct resonance structure.<br>" % list_to_string(incorrect_steps)
+                elif len(incorrect_steps) > 1:
+                    feedback += "In steps %s you do not include the correct resonance structure.<br>" % list_to_string(incorrect_steps)
+    
+                if reaction_steps[5]['resonance_present'] == False:
+                    feedback += "Check in the exersice whether you should include a resonance structure."
+                    
         feedback += "<br>Good luck with the adjustments to your mechanism! Paste the JSON code of your new reaction mechanism in the field above for a new analysis."
         
     else:

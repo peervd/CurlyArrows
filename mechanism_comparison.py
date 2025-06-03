@@ -427,6 +427,8 @@ def compare_steps(model_canonical, student_canonical, acid_base):
         "model_steps": m_len,
         "student_steps": st_len,
     }
+    ### remove empty lists as values from individual_comparisons
+    individual_comparisons = {k: v for k, v in individual_comparisons.items() if v}
     
     return individual_comparisons, molecular_structure, general, {"product":product}
 

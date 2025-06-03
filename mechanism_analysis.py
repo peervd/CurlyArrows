@@ -151,7 +151,12 @@ def reaction_rules(arrows,reaction):
                     reaction_type.append('loss of leaving group')
                     continue
                 elif max(s.GetNumAtoms() for s in r_chem) == max(s.GetNumAtoms() for s in p_chem):
-                    reaction_type.append('rearrangement')
+                    index_largest_reactant = max(enumerate(r_chem), key=lambda x: x[1].GetNumAtoms())[0]
+                    index_largest_product = max(enumerate(p_chem), key=lambda x: x[1].GetNumAtoms())[0]
+                    if Chem.MolToSmiles(r_chem[index_largest_reactant]) == Chem.MolToSmiles(p_chem[index_largest_product]):
+                        reaction_type.append('rearrangement')
+                    else:
+                        reaction_type.append('internal electron movement')
                     continue
 
             elif a[4] != a[5]:
@@ -163,9 +168,10 @@ def reaction_rules(arrows,reaction):
 def reaction_arrow_check(steps,arrows):
     step_numbers = steps.keys()
     wrong_arrows = {}
+
     for s in step_numbers:
-        if steps[s][0][0] == True:
-            m_step = steps[s][1]
+        if steps[s][0][0][0] == True:
+            m_step = steps[s][0][1]
             if m_step == 'not_present':
                 continue
             if arrows['s_arrows'][s] != arrows['m_arrows'][m_step] and arrows['m_arrows'][m_step] == 'synthetic':
@@ -370,6 +376,7 @@ def individual_steps(model,student,res_exe,reaction_arrows):
             presence_resonance = check_resonance(model,student,steps)
             resonance = True
         else: 
+            presence_resonance = check_resonance(model,student,steps)
             resonance = False
 
     if steps['index_resonance'] is False:
