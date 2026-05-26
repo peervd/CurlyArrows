@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Instructions - CurlyArrows{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="card">
+                <div class="card-header text-white" style="background-color: #003566;">
+                    <h3 class="mb-0"><i class="bi bi-info-circle"></i> How to Use CurlyArrows</h3>
+                </div>
+                <div class="card-body">
+                    <!-- <img src="{{ url_for('static', filename='exe_img/instructions.png') }}" 
+                         alt="Instructions" class="img-fluid mb-4"> -->
+                    
+                    <h4>Getting Started</h4>
+                    <ol class="text-start">
+                        <li class="mb-2">Select an exercise from the 'Exercises' menu and read the question</li>
+                        <li class="mb-2">Use the ChemDoodle sketcher to draw the reaction mechanism
+                            <ul class="mt-2">
+                                <li>Write out the mechanism from left to right</li>
+                                <li>If a resonance structure is present, draw it below the corresponding molecule in the main chain</li>
+                                <li>Use curved arrows to show electron movement </li>
+                                <li>Indicate formal charges on atoms </li>
+                                <li>For proton transfer steps: write out specific protons ‘H’ and their bond in the molecular structure</li>
+                                <li>You can use 'H+' for and acid and 'Ba' for a base </li>
+                            </ul>
+                        </li>
+                        <li class="mb-2">Use the textbox for your reasoning: 
+                            <ul class="mt-2">
+                                <li>For each step identify whether it is a ‘proton transfer’, ‘nucleophilic attack’, ‘loss of a leaving group’, ‘rearrangement’ or a combination</li>
+                                <li>Explain why each step occurs</li>
+                                <li>Example: Step 1 is a proton transfer. Here, a proton is abstracted from the acidic alpha carbon next to the carbonyl. Hydroxide, [OH-], acts as a strong base. Step 2 is a …  </li>
+                            </ul>
+                        </li>
+                        <li class="mb-2">Click "ANALYZE" to get AI-powered feedback</li>    
+                    </ol>
+                    
+                    <hr class="my-4">
+                    <h4>Feedback System</h4>
+                    <p class="lead text-start">
+                        The AI analyzes your mechanism based on:
+                    </p>
+                    <ul class="text-start">
+                        <li>Molecular structure accuracy </li>
+                        <li>Correctness of the transformations </li>
+                        <li>Logical flow of electrons (curved arrows) </li>
+                        <li>Your written reasoning</li>
+                    </ul>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+s

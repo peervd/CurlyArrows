@@ -1,0 +1,702 @@
+/* Base reset */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui; }
+
+/* Sticky footer layout */
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+footer {
+  flex-shrink: 0;
+}
+
+/* Wageningen UR Huisstijl - Official Wageningen Green (PMS 361) */
+.bg-wur-green {
+  background-color: #34B233 !important;
+}
+
+.navbar-brand-img {
+  height: 50px;
+  margin-right: 15px;
+}
+
+/* Scrollbar styling */
+body { scrollbar-width: thin; scrollbar-color: lightgrey; }
+body::-webkit-scrollbar { width: 12px; }
+body::-webkit-scrollbar-track { background: #f9f9f9; }
+body::-webkit-scrollbar-thumb { background-color: lightgrey; border: 3px solid #f9f9f9; }
+
+/* ---------------------------------------------
+   Exercise Instruction Banner
+   --------------------------------------------- */
+.exercise-instruction-banner {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease-out;
+  margin-bottom: 20px;
+}
+
+.exercise-instruction-banner .alert {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 2px solid #2196f3;
+  border-radius: 0;
+  padding: 20px 30px;
+  margin: 0;
+}
+
+.exercise-instruction-banner .alert-heading {
+  color: #1565c0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exercise-instruction-banner .alert-heading i {
+  font-size: 1.5rem;
+}
+
+.exercise-instruction-banner #exerciseInstructionContent {
+  color: #0d47a1;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.exercise-instruction-banner #exerciseInstructionContent strong {
+  color: #1565c0;
+  font-weight: 600;
+}
+
+.exercise-instruction-banner #exerciseInstructionContent em {
+  color: #1976d2;
+  font-style: italic;
+}
+
+.exercise-instruction-banner .btn-close {
+  font-size: 1.2rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.exercise-instruction-banner .btn-close:hover {
+  opacity: 1;
+}
+
+/* Exercise banner content layout */
+.exercise-banner-content {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.exercise-banner-image {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  background: white;
+  flex-shrink: 0;
+}
+
+.exercise-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Responsive: stack image and text on smaller screens */
+@media (max-width: 768px) {
+  .exercise-banner-content {
+    flex-direction: column;
+  }
+
+  .exercise-banner-image {
+    max-width: 100%;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------
+   Analysis Section (Two-Column Layout)
+   --------------------------------------------- */
+.analysis-section {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.analysis-section .card {
+  border-radius: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-section .card-header {
+  background: #003566 !important;
+  border-bottom: 3px solid #002244;
+}
+
+.analysis-section .reasoning-panel,
+.analysis-section .feedback-panel {
+  height: 100%;
+}
+
+.analysis-section textarea {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.analysis-section textarea:focus {
+  border-color: #17a2b8;
+  box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.15);
+  outline: none;
+}
+
+.analysis-section #analyze-input {
+  background-color: #ffffff;
+  min-height: 250px;
+}
+
+.analysis-section #analyze-output {
+  background-color: #f8f9fa;
+  min-height: 350px;
+  color: #212529;
+}
+
+.analysis-section .btn-lg {
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-section .btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  border: none;
+}
+
+.analysis-section .btn-success:hover {
+  background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.analysis-section .btn-success:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-section .form-label {
+  font-size: 1.1rem;
+  color: #495057;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-section .form-label i {
+  font-size: 1.2rem;
+  color: #17a2b8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .analysis-section .col-lg-6 {
+    margin-bottom: 20px;
+  }
+
+  .analysis-section #analyze-output {
+    min-height: 300px;
+  }
+}
+
+/* ---------------------------------------------
+   Sketcher Section (Full-Width Layout)
+   --------------------------------------------- */
+.sketcher-section {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.sketcher-section .card {
+  border-radius: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sketcher-section .card-header {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  border-bottom: 3px solid #218838;
+  padding: 15px 25px;
+}
+
+.sketcher-section .user-info-inline {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  opacity: 0.95;
+}
+
+.sketcher-section .user-info-inline i {
+  font-size: 1.3rem;
+}
+
+.sketcher-section .card-body {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sketcher-section #sketcherContainer {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ChemDoodle canvas styling */
+.sketcher-section #sketcherContainer canvas,
+.sketcher-section #sketcherContainer .ChemDoodleWebComponent {
+  max-width: 100%;
+  height: auto;
+}
+
+.sketcher-section .btn-toolbar {
+  margin-top: 20px;
+}
+
+.sketcher-section .btn-group .btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sketcher-section .btn-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  border: none;
+  color: #fff;
+}
+
+.sketcher-section .btn-warning:hover {
+  background: linear-gradient(135deg, #e0a800 0%, #e68900 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sketcher-section .btn-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  border: none;
+  color: #fff;
+}
+
+.sketcher-section .btn-info:hover {
+  background: linear-gradient(135deg, #138496 0%, #0e6674 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sketcher-section .btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  border: none;
+  color: #fff;
+}
+
+.sketcher-section .btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #4e555b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments for sketcher */
+@media (max-width: 768px) {
+  .sketcher-section .card-body {
+    padding: 15px;
+  }
+
+  .sketcher-section #sketcherContainer {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .sketcher-section .user-info-inline {
+    font-size: 0.9rem;
+  }
+
+  .sketcher-section .btn-group .btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .sketcher-section #sketcherContainer {
+    max-width: 100%;
+  }
+}
+
+/* ChemDoodle specific element positioning */
+#sketcher {
+  position: static !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Ensure ChemDoodle doesn't overflow container */
+.sketcher-section #sketcherContainer * {
+  box-sizing: border-box;
+}
+
+/* Hide any elements that go beyond container */
+.sketcher-section #sketcherContainer {
+  overflow: hidden;
+}
+
+/* Allow toolbar to scroll horizontally if needed on small screens */
+@media (max-width: 900px) {
+  .sketcher-section #sketcherContainer {
+    overflow-x: auto;
+  }
+}
+
+/* ---------------------------------------------
+   Top section: exercise image + controls
+   --------------------------------------------- */
+.exercise-header {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 12px 0;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.exercise-header img {
+  max-height: 180px;
+  width: auto;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 100px;
+}
+.controls label { font-size: 0.9rem; opacity: 0.8; }
+#exerciseSelect { padding: 8px 10px; font-size: 1rem; }
+
+#instructionsBtn {
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #4EA72E;
+  color: #fff;
+  cursor: pointer;
+}
+#instructionsBtn:hover { filter: brightness(0.95); }
+#instructionsBtn:active { transform: translateY(1px); }
+
+/* Small top-right icon that doesn't interfere with layout */
+.top-right-icon {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 140px;
+  height: auto;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------
+   ChemDoodle wrapper + header
+   --------------------------------------------- */
+
+/* Make the chemdoodle section a centered column so header sits ON TOP of canvas */
+.chemdoodle {
+  position: relative;
+  margin: 12px auto;
+  max-width: 900px;
+  width: 100%;
+  display: flex;             /* stack header and canvas */
+  flex-direction: column;
+  align-items: center;       /* center header + canvas horizontally */
+  gap: 8px;
+}
+
+/* Header centered above canvas */
+.header {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+/* Title */
+.header .title h1 {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+align-items: center;
+}
+
+/* Icon button grid: 2 per row, centered */
+.header .nav {
+  display: grid;
+  grid-template-columns: repeat(2, 35px);
+  gap: 8px;
+  justify-content: center;   /* center the entire grid */
+  justify-items: center;     /* center items within their cells */
+  align-items: center;
+}
+
+/* Prevent old floats or global rules from breaking alignment */
+.header .nav button {
+  float: none !important;
+  padding: 1px;
+  width: 35px;
+  height: 35px;
+  outline: none;
+  appearance: none;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  box-shadow: 1px 1px 3px 0 rgba(0,0,0,0.25);
+  background: #fff;
+  cursor: pointer;
+}
+.header .nav button svg { width: 100%; display: block; margin: auto; }
+.header .nav button:active {
+  background-color: #bdbdbd;
+  box-shadow: 1px 1px 2px 0 rgba(0,0,0,0.15) inset;
+}
+
+/* If a global .ui-icon rule exists, keep toolbar icons visible and centered */
+.header .nav .ui-icon {
+  text-indent: 0;
+  overflow: visible;
+  background: none;
+  display: inline-block;
+}
+
+/* ---------------------------------------------
+   Canvas
+   --------------------------------------------- */
+.ChemDoodleWebComponent, canvas {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------
+   Center the whole main area to match canvas width
+   --------------------------------------------- */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 12px 12px;
+}
+main .container {
+  display: flex;
+  flex-direction: column;    /* make it vertical so nothing sits beside canvas */
+  align-items: center;       /* center children */
+  gap: 8px;
+}
+
+/* IMPORTANT: do NOT absolutely position the first child — that caused overlap */
+main .container > div:first-of-type {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  display: block;
+  text-align: center;
+}
+
+/* ---------------------------------------------
+   Timeline (unchanged)
+   --------------------------------------------- */
+main .openTimeline {
+  width: 35px;
+  height: 35px;
+  position: absolute;
+  bottom: 4px;
+  right: -2px;
+  z-index: 10;
+  border: 1px solid #4e97ae;
+  outline: none;
+  appearance: none;
+  border-radius: 5px 0 0 5px;
+  background-color: white;
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+main .openTimeline.open { right: 800px; }
+main .openTimeline.open svg { transform: rotate(180deg); }
+
+main .timelineTitle { padding: 10px 20px; }
+main .timelineTitle h1 { display: inline-block; }
+main .timelineTitle #clearClipboard {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  margin-left: 20px;
+  outline: none;
+  appearance: none;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  box-shadow: 1px 1px 3px 0 rgba(0,0,0,0.25);
+}
+main .timelineTitle #clearClipboard svg { width: 100%; display: block; margin: auto; }
+main .timelineTitle #clearClipboard:active {
+  background-color: #bdbdbd;
+  box-shadow: 1px 1px 2px 0 rgba(0,0,0,0.15) inset;
+}
+main .timelineTitle #clearClipboard:hover { cursor: pointer; }
+
+main .timeline {
+  visibility: hidden;
+  display: none;
+  opacity: 0;
+  position: absolute;
+  top: 0 !important;
+  right: -1px;
+  left: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #4e97ae;
+  transition: opacity 0.3s;
+  color: #4e97ae;
+}
+main .timeline::-webkit-scrollbar { width: 8px; }
+main .timeline::-webkit-scrollbar-track { background: #82b6c7; }
+main .timeline::-webkit-scrollbar-thumb { background-color: #4e97ae; border: 2px solid #82b6c7; }
+main .timeline.open {
+  visibility: visible;
+  display: block;
+  opacity: 1;
+  width: 800px;
+  height: 500px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  background-color: white;
+  border: 1px solid #4e97ae;
+  z-index: 1;
+}
+main .timeline .closeTimeline {
+  position: inherit;
+  top: -1px;
+  right: -1px;
+  width: 35px;
+  height: 35px;
+  border: 1px solid #4e97ae;
+  outline: none;
+  appearance: none;
+  border-radius: 0 0 0 5px;
+  background-color: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #4e97ae;
+  line-height: 100%;
+}
+main .timeline #clipboardTime div[id^=snapshot-] {
+  display: flex;
+  flex-flow: column;
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #4e97ae;
+}
+main .timeline #clipboardTime img {
+  width: 100%;
+  border: 1px solid #4e97ae;
+}
+main .timeline #clipboardTime div[id^=link-]:hover { cursor: pointer; }
+main .timeline #clipboardTime div[id^=link-]:active { cursor: progress; }
+
+/* ---------------------------------------------
+   Analyze block (width/height fixes)
+   --------------------------------------------- */
+.analyze-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  margin-top: 40px;
+  border-top: 1px solid #ddd;
+}
+
+.analyze-block textarea {
+  width: 100%;
+  max-width: 800px;
+  font-size: 1rem;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.4;
+  height: 200px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+#analyze-input  { min-height: 200px; }
+#analyze-output { min-height: 300px; background: #fafafa; border-color: #eee; }
+
+.btn-green {
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #4EA72E;
+  color: #fff;
+  cursor: pointer;
+}
+.btn-green:hover { filter: brightness(0.95); }
+.btn-green:active { transform: translateY(1px); }
+
+/*# sourceMappingURL=styles.css.map */
