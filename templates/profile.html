@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - CurlyArrows{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-circle"></i> User Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Name:</strong></div>
+                        <div class="col-sm-8">{{ user.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Email:</strong></div>
+                        <div class="col-sm-8">{{ user.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>User ID:</strong></div>
+                        <div class="col-sm-8">{{ user.oid }}</div>
+                    </div>
+                    {% if user.given_name %}
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>First Name:</strong></div>
+                        <div class="col-sm-8">{{ user.given_name }}</div>
+                    </div>
+                    {% endif %}
+                    {% if user.surname %}
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Last Name:</strong></div>
+                        <div class="col-sm-8">{{ user.surname }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <h5 class="mt-4"><i class="bi bi-journal-text"></i> Recent Submissions</h5>
+                    <div id="recentSubmissions">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load recent submissions
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/submissions')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('recentSubmissions');
+            
+            if (data.submissions && data.submissions.length > 0) {
+                const table = `
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Exercise</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.submissions.slice(0, 10).map(sub => `
+                                <tr>
+                                    <td>Exercise ${sub.exercise_number}</td>
+                                    <td>${new Date(sub.submitted_at).toLocaleString()}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="viewSubmission(${sub.id})">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML = table;
+            } else {
+                container.innerHTML = '<p class="text-muted">No submissions yet.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading submissions:', error);
+            document.getElementById('recentSubmissions').innerHTML = 
+                '<div class="alert alert-danger">Error loading submissions</div>';
+        });
+});
+
+function viewSubmission(id) {
+    // TODO: Implement submission detail view
+    alert('View submission ' + id);
+}
+</script>
+{% endblock %}

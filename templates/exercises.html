@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Exercises - CurlyArrows{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="card">
+                <div class="card-header text-white" style="background-color: #003566;">
+                    <h3 class="mb-0"><i class="bi bi-list-ol"></i> Available Exercises</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Select an exercise to practice organic reaction mechanisms.</p>
+                    
+                    <div class="row">
+                        {% for exercise in exercises %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <img src="{{ url_for('static', filename='exe_img/exercise_%02d.png' % exercise) }}" 
+                                     class="card-img-top" 
+                                     alt="Exercise {{ exercise }}"
+                                     onerror="this.src='{{ url_for('static', filename='exe_img/exercise_%d.png' % exercise) }}'">
+                                <div class="card-body">
+                                    <h5 class="card-title">Exercise {{ exercise }}</h5>
+                                    </p>
+                                    <a href="{{ url_for('main.index') }}?exercise={{ exercise }}"
+                                       class="btn" style="background-color: #34B233; color: white; border: none;">
+                                        <i class="bi bi-pencil-square"></i> Select
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

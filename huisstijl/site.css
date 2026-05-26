@@ -1,0 +1,118 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    position: relative;
+    min-height: 100%;
+  }
+  body {
+    margin-bottom: 40px; /* Margin bottom by footer height */
+  }
+
+  .navbar-brand-img {
+    margin: 10px 25px 0px 10px;
+  }
+
+  .navbar-brand-img-right {
+    height: 50px;
+    margin: 10px 10px 10px 15px;
+    margin-left: auto;
+  }
+
+  .bg-green{
+    background-color: #003566;
+  }
+
+  .content {
+    min-height: 78vh;
+  }
+
+  .textarea {
+    min-width: 100%
+  }
+
+  .footer {
+    height: 30px; /* Set the fixed height of the footer here */
+    color: white;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .footer > div {
+    margin-top: 5px;
+  }
+
+  /* Custom page CSS
+   * Not required for template or sticky footer method.
+   * --------------------------------------------------
+
+  .container {
+    padding: 60px 15px 0;
+  }
+  .container .text-muted {
+    margin: 7px 0;
+  }
+
+  .navbar-brand {
+    padding: 0px;
+  }
+
+  .navbar-brand>img {
+    height: 100%;
+    width: auto;
+  }
+
+  .navbar-text {
+      position: absolute;
+      width: 100%;
+      left: 0;
+      text-align: center;
+      margin: auto;
+      padding-top: 10px;
+  }*/
+
+  .xpsm-table thead th {
+    background-color: orange !important;
+    color: black !important;
+  }
+  /* Clear table action cell styles */
+  #farms-table td.table-action-cell {
+      background: #fff !important;
+      border: none !important;
+      box-shadow: none !important;
+  }
+
+  .compartment-description {
+    font-size: 1.1em;
+    color: #555;
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.position-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 16px 0;
+}
+.position-divider::before,
+.position-divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #bbb;
+}
+.position-divider:not(:empty)::before {
+    margin-right: 0.75em;
+}
+.position-divider:not(:empty)::after {
+    margin-left: 0.75em;
+}
+.position-divider span {
+    font-weight: bold;
+    color: #333;
+}

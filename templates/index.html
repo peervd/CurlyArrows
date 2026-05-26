@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}CurlyArrows - Mechanism Sketcher{% endblock %}
+
+{% block content %}
+<!-- Full-width Exercise Instruction Banner -->
+<div id="exerciseInstructionBanner" class="exercise-instruction-banner" style="display: none;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-primary mb-0" role="alert">
+                    <button type="button" class="btn-close float-end" aria-label="Close" onclick="document.getElementById('exerciseInstructionBanner').style.display='none'"></button>
+                    <h5 class="alert-heading">
+                        <i class="bi bi-info-circle"></i>
+                        <span id="exerciseInstructionTitle">Exercise Instructions</span>
+                    </h5>
+                    <div id="exerciseInstructionContent">
+                        <p class="mb-0">Select an exercise to see instructions here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sketcher Section -->
+<div class="sketcher-section">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <!-- ChemDoodle Canvas Container -->
+                <div id="sketcherContainer" class="mb-3">
+                    <!-- Sketcher will be initialized here by JavaScript -->
+                    <canvas id="sketcher"></canvas>
+                </div>
+
+                <!-- Hidden fields for JSON handling -->
+                <textarea id="templateInput" style="display:none;"></textarea>
+                <input id="base64templateInput" style="display:none;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full-width Analysis Section -->
+<div class="analysis-section">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header text-white" style="background-color: #003566;">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Left Column: Your Reasoning -->
+                            <div class="col-lg-6">
+                                <div class="reasoning-panel">
+                                    <label for="analyze-input" class="form-label fw-bold">
+                                        <i class="bi bi-pencil-square"></i> Your Reasoning
+                                    </label>
+                                    <textarea id="analyze-input" class="form-control mb-3" rows="10"
+                                              placeholder="Explain your reasoning for this mechanism here:&#10;&#10;For each step in your drawing:&#10;1. Identify the type(s) of transformation&#10;2. Explain why it happens"></textarea>
+                                    <button id="analyze-btn" type="button" class="btn w-100 btn-lg" style="background-color: #34B233; color: white; border: none;">
+                                        <i class="bi bi-cpu"></i> <strong>ANALYZE</strong>
+                                    </button>
+                                    <small class="form-text text-muted d-block mt-2">
+                                        <i class="bi bi-lightbulb"></i> Tip: Detailed reasoning helps the AI provide better feedback
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Feedback -->
+                            <div class="col-lg-6">
+                                <div class="feedback-panel">
+                                    <label for="analyze-output" class="form-label fw-bold">
+                                        <i class="bi bi-chat-left-text"></i> AI Feedback
+                                    </label>
+                                    <textarea id="analyze-output" class="form-control" rows="14" readonly
+                                              placeholder="You will receive feedback on:&#10;&#10;• Molecular structure&#10;• Correctness of the transformations&#10;• Logical flow of electrons (curved arrows)&#10;• Your written reasoning"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden: Keep exercise select for JavaScript compatibility, but don't display -->
+<select id="exerciseSelect" style="display:none;">
+    <option value="" disabled selected>Choose an exercise...</option>
+    {% for i in range(1, 25) %}
+    <option value="{{ i }}">Exercise {{ i }}</option>
+    {% endfor %}
+</select>
+<img id="exerciseImage" style="display:none;" src="{{ url_for('static', filename='exe_img/instructions.png') }}" alt="Exercise image">
+
+<!-- Timeline/History Container (hidden by default) -->
+<div class="timeline">
+    <div class="timeline-header">
+        <h5>History</h5>
+        <button class="closeTimeline btn btn-sm btn-close"></button>
+    </div>
+    <div id="clipboardTime" class="timeline-content"></div>
+</div>
+
+<button class="openTimeline btn btn-primary">
+    <i class="bi bi-clock-history"></i> History
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<!-- ChemDoodle JS -->
+<script src="{{ url_for('static', filename='lib/ChemDoodleWeb.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/uis/ChemDoodleWeb-uis.js') }}"></script>
+
+<!-- Custom JS for canvas creation and functionality -->
+<script src="{{ url_for('static', filename='js/createcanvas-full.js') }}"></script>
+<script src="{{ url_for('static', filename='js/base.js') }}"></script>
+{% endblock %}
