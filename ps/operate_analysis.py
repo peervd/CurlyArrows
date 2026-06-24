@@ -5,6 +5,7 @@ from .primary_feedback import analysis_feedback
 from .openai_input import  generate_feedback, generate_error_mechanism, create_concept_tags, generate_prompt_rephrase, generate_prompt_categorize, generate_prompt_catC, generate_prompt_catD, assign_category
 from .openai_communication import communicate_prompt
 import os
+import ast
 
 def analyze(openai_key:False,exersice,student_json_code,student_reasoning:False):
     ''' This function operates the analysis from the ORC_reaction_analysis input '''
@@ -63,7 +64,9 @@ def analyze(openai_key:False,exersice,student_json_code,student_reasoning:False)
             primary_category = communicate_prompt(prompt,openai_key)
             #return primary_category #dont forget to remove feedback request!
             try:
-                cat, letter = primary_category.split()
+                d = ast.literal_eval(primary_category)
+                letter = d["Category"]
+                reasoning_feedback = d["Reasoning"]
                 feedback_category = assign_category(letter,feedback_CA['category'])
                 if feedback_category == 'A':
                     return "Both your reaction mechanism and explanation are correct! Keep up the good work.\n\n" \
@@ -73,10 +76,10 @@ def analyze(openai_key:False,exersice,student_json_code,student_reasoning:False)
                     feedback += feedback_CA['feedback']
                     return feedback
                 elif feedback_category == 'C':
-                    feedback_prompt = generate_prompt_catC('ps/prompt_template_catC.txt',concept_tags_text,student_reasoning)
+                    feedback_prompt = generate_prompt_catC('ps/prompt_template_catC.txt',concept_tags_text,student_reasoning,reasoning_feedback)
                     return communicate_prompt(feedback_prompt,openai_key)
                 elif feedback_category == 'D' or feedback_category == None:
-                    feedback_prompt = generate_prompt_catD('ps/prompt_template_catD.txt',concept_tags_text,feedback_CA['feedback'],student_reasoning)
+                    feedback_prompt = generate_prompt_catD('ps/prompt_template_catD.txt',concept_tags_text,feedback_CA['feedback'],student_reasoning,reasoning_feedback)
                     return communicate_prompt(feedback_prompt,openai_key)
             except:
                 feedback_prompt = generate_prompt_catD('ps/prompt_template_general.txt',concept_tags_text,feedback_CA['feedback'],student_reasoning)

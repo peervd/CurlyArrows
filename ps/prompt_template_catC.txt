@@ -49,10 +49,74 @@ If none of these conditions apply, continue to Step 1.
 
 1. You will analyze and compare the inputs as follows:
 
-Check Step Alignment:
-1.a. Verify if the student identified the correct number and order of steps.
-1.b. For each step, check if the correct type of transformation is identified or a semantic equivalent (e.g. nucleophilic attack, loss of leaving group, rearrangement, proton transfer).
-1.c. Confirm whether the reasoning correctly connects to the key concept tags  or a semantic equivalent (e.g. leaving group ability, carbocation stability, resonance).
+Check Alignment:
+Step 1. Analysis - Determine Mechanistic Step Alignment
+
+Evaluate each mechanistic step in the model answer individually.
+
+Score three checks per step:
+
+1.a. Step count check (True/False):
+The number of steps in the model answer is the same as the number of steps in the student answer. Count the number of separate transformations (nucleophilic attack, proton transfer, loss of leaving group, rearrangement). If the student merges, skips, or adds unrelated steps → False.
+
+1.b. Transformation type check (True/False):
+Compare the same step in the student answer and model answer and check if the kind chemical transformation matches (nucleophilic attack, proton transfer, loss of leaving group, rearrangement).
+
+Paraphrased or synonymous descriptions count if the chemical meaning is clear.
+
+⚠️ If the transformation appears only in a different student step → False.
+⚠️ If incorrect → False.
+
+1.c. Concept tag check (True/False/Not applicable):
+
+For each model-answer step, evaluate the “most key concept tags” as a checklist of required chemical claims.
+
+Split the concept tags into separate required claims. A required claim may specify:
+
+* a chemical species or intermediate,
+* a mechanistic role,
+* an action or transformation,
+* a structural feature,
+* a charge or stability argument,
+* a relationship between two species or events.
+
+Mark 1.c as True only if the matching student step explicitly states every required claim with the same specific chemical meaning.
+
+Mark 1.c as False if any required claim is:
+
+* missing,
+* only implied,
+* replaced by a vague/general term,
+* only partially stated,
+* chemically different,
+* or mentioned only in another step.
+
+Do not judge the concept tags by overall similarity. Judge them claim by claim.
+
+A vague term such as “molecule”, “compound”, “thing”, “object”, “species”, or “intermediate” is not sufficient when the model answer requires a specific chemical identity such as carbocation, enolate, alkoxide, iminium ion, chloride, water, hydroxide, etc.
+
+A paraphrase is acceptable only if it preserves the same specific chemical claim.
+
+Example:
+Model concept tags:
+formation of carbocation; resonance stabilization; water as good leaving group
+
+Student:
+Water is a good leaving group and the molecule we form is stabilized by resonance.
+
+Result:
+False
+
+Reason:
+The student states water as leaving group and resonance stabilization, but does not explicitly identify the formed species as a carbocation.
+
+Examples of semantic matches:
+- “water as nucleophile” ≈ “water attacks”
+- “chloride is the leaving group” ≈ “chloride leaves”
+- “carbocation stability because of fully substituted carbon” ≈ “formation of a stable tertiary carbocation”
+- “proton transfer” ≈ “deprotonation/protonation occurs,” if chemically aligned
+
+
 1.d. Important: Mention secondary concept tags only if the student’s reasoning incorrectly depends on them or on a semantic equivalent. Otherwise, omit them.
 ---
 

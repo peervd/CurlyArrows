@@ -2,15 +2,15 @@ from .helper_functions import list_to_string
 from .molecular_structures import get_molecule_name
 import re
 
-
 def create_concept_tags(concept_tags):
     tag_prompt = "Here, we provide predefined background information on the reaction. "
     tag_prompt += "The reactants are %s and it produces %s. " %(concept_tags['reactants'],concept_tags['product'])
-    tag_prompt += "It is a %s type of reaction with a total number of %s steps. " %(concept_tags['reaction_type'],len(concept_tags['steps'].keys()))
-    tag_prompt += "Each step of the mechanism has a certain category of transformation and a number of concept tags. These are specified below: "
+    tag_prompt += "It is a %s type of reaction with %s steps. " %(concept_tags['reaction_type'],len(concept_tags['steps'].keys()))
+    tag_prompt += "Each step of the mechanism has a certain category of transformation and sometimes associated with a number of concept tags. These are specified below:/n"
     for step in concept_tags['steps'].keys():
         tag_prompt += "Step %s of the mechanism is a %s. " %(step,concept_tags['steps'][step]['category'])
-        tag_prompt += "The 'key' concept tags for step %s are: %s. 'Secondary' concept tags for step %s are: %s. " %(step,concept_tags['steps'][step]['tags_1'],step,concept_tags['steps'][step]['tags_2'])
+        if concept_tags['steps'][step]['tags_1']:
+            tag_prompt += "The most key concept tags of step %s are: %s. Secondary concept tags are: %s." %(step,concept_tags['steps'][step]['tags_1'],concept_tags['steps'][step]['tags_2'])
     return tag_prompt
     
 def generate_prompt_categorize(template_path,concept_tags,feedback_CA,student_reasoning):
@@ -30,9 +30,11 @@ def generate_prompt_categorize(template_path,concept_tags,feedback_CA,student_re
         template = f.read()
     # Replace the placeholders with the actual inputs
     template = template.replace(
-        "**Paste instructor-provided mechanism summary here.**", concept_tags.strip())
+        "*Paste instructor-provided mechanism summary here.*", concept_tags.strip())
     template = template.replace(
-        "**Paste student’s explanation here.**", student_reasoning.strip())
+        "*Paste mechanical analysis of student's drawing here.*", feedback_CA.strip())
+    template = template.replace(
+        "*Paste student’s explanation here.*", student_reasoning.strip())
 
     return template
 
@@ -56,7 +58,7 @@ def generate_prompt_rephrase(template_path,feedback_CA):
 
     return template
 
-def generate_prompt_catC(template_path,concept_tags,student_reasoning):
+def generate_prompt_catC(template_path,concept_tags,student_reasoning,reasoning_feedback = False):
     """
     Loads a markdown prompt template and fills in the three input sections.
 
@@ -64,7 +66,8 @@ def generate_prompt_catC(template_path,concept_tags,student_reasoning):
     - template_path (str): Path to the prompt_template.txt file.
     - concept_tags (str): Reaction Mechanism Overview (Reference).
     - feedback_CA (str): Student's Drawn Mechanism – Mechanical Analysis.
-    - student_reasoning (str): Student’s Reasoning (Written Explanation).
+    - student_reasoning (str): Student’s Reasoning (Written Explanation)
+    - reasoning feedback (str): Explanation why student feedback is scored as incorrect.
 
     Returns:
     - str: The final filled-in prompt ready to be passed to the LLM.
@@ -73,13 +76,19 @@ def generate_prompt_catC(template_path,concept_tags,student_reasoning):
         template = f.read()
     # Replace the placeholders with the actual inputs
     template = template.replace(
-        "**Paste instructor-provided mechanism summary here.**", concept_tags.strip())
+        "*Paste instructor-provided mechanism summary here.*", concept_tags.strip())
     template = template.replace(
-        "**Paste student’s explanation here.**", student_reasoning.strip())
+        "*Paste student’s explanation here.*", student_reasoning.strip())
+    if reasoning_feedback:
+        template = template.replace(
+            "*Paste AI-feedback here.*", reasoning_feedback.strip())
+    else:
+        template = template.replace(
+            "*Paste AI-feedback here.*", "No reasoning was provided on why the student mechanism is scored as incorrect. Judge yourself whether this needs any feedback!")
 
     return template
 
-def generate_prompt_catD(template_path,concept_tags,feedback_CA,student_reasoning):
+def generate_prompt_catD(template_path,concept_tags,feedback_CA,student_reasoning,reasoning_feedback = False):
     """
     Loads a markdown prompt template and fills in the three input sections.
 
@@ -88,7 +97,8 @@ def generate_prompt_catD(template_path,concept_tags,feedback_CA,student_reasonin
     - concept_tags (str): Reaction Mechanism Overview (Reference).
     - feedback_CA (str): Student's Drawn Mechanism – Mechanical Analysis.
     - student_reasoning (str): Student’s Reasoning (Written Explanation).
-
+    - reasoning feedback (str): Explanation why student feedback is scored as incorrect.
+    
     Returns:
     - str: The final filled-in prompt ready to be passed to the LLM.
     """
@@ -96,14 +106,19 @@ def generate_prompt_catD(template_path,concept_tags,feedback_CA,student_reasonin
         template = f.read()
     # Replace the placeholders with the actual inputs
     template = template.replace(
-        "**Paste instructor-provided mechanism summary here.**", concept_tags.strip())
+        "*Paste instructor-provided mechanism summary here.*", concept_tags.strip())
     template = template.replace(
-        "**Paste mechanical analysis of student's drawing here.**", feedback_CA.strip())
+        "*Paste mechanical analysis of student's drawing here.*", feedback_CA.strip())
     template = template.replace(
-        "**Paste student’s explanation here.**", student_reasoning.strip())
+        "*Paste student’s explanation here.*", student_reasoning.strip())
+    if reasoning_feedback:
+        template = template.replace(
+            "*Paste AI-feedback here.*", reasoning_feedback.strip())
+    else:
+        template = template.replace(
+            "*Paste AI-feedback here.*", "No reasoning was provided on why the student mechanism is scored as incorrect. Judge yourself whether this needs any feedback!")
 
     return template
-
 def assign_category(AI_cat,CA_cat):
     if AI_cat == 'A' and CA_cat == 'A':
         return 'A'

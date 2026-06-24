@@ -19,7 +19,7 @@ Evaluate each mechanistic step in the model answer individually.
 Score three checks per step:
 
 1.a. Step count check (True/False):
-The number of steps in the model answer is the same as the number of steps in the student answer. If the student merges, skips, or adds unrelated steps → False.
+The number of steps in the model answer is the same as the number of steps in the student answer. Count the number of separate transformations (nucleophilic attack, proton transfer, loss of leaving group, rearrangement). If the student merges, skips, or adds unrelated steps → False.
 
 1.b. Transformation type check (True/False):
 Compare the same step in the student answer and model answer and check if the kind chemical transformation matches (nucleophilic attack, proton transfer, loss of leaving group, rearrangement).
@@ -27,43 +27,68 @@ Compare the same step in the student answer and model answer and check if the ki
 Paraphrased or synonymous descriptions count if the chemical meaning is clear.
 
 ⚠️ If the transformation appears only in a different student step → False.
-⚠️ If incorrect or ambiguous → False.
+⚠️ If incorrect → False.
 
-1.c. Concept tag check (True/False):
-Each model step includes essential mechanistic ideas (“most key concept tags”).
-Mark True only if:
+1.c. Concept tag check (True/False/Not applicable):
+Evaluate the complete list of “most key concept tags” for the model-answer step.
 
-The same idea is conveyed for all “most key concept tags” in the matching student step semantically. So, a paraphrase with the same chemical meaning → True
-(e.g., “good leaving group [Cl-]” in “most key concept tags” ≈ “departure of stable chloride species” in matching step from student answer)
+If no concept tags are listed, mark 1.c as Not applicable.
 
-Mark False if:
-- The “most key concept tags” appears only in a different step
-- The “most key concept tags” is missing, unclear, or incorrect
-- If there is any uncertainty whether the concept is conveyed → mark False.
+If concept tags are listed, treat all “most key concept tags” as a closed checklist. Every listed tag is required.
 
-The same wording must convey all 'most key' concept tags in the model answer semantically between the matching step in the student answer and model answer (not necessarily word-for-word). If the student does not explicitly indicate the mechanistic idea, mark that check as False — do not infer understanding.
-	Examples of semantic matches:
-		“water as nucleophile” ≈ “attack by water”
-		“loss of leaving group” ≈ “chloride leaves”
-		“carbocation stability” ≈ “stable tertiary carbocation”
+Before judging, count the number of listed concept tags.
 
-	If the meaning clearly corresponds, count it as present.
+Then evaluate every tag one by one.
 
-⚠️ Important:
+For each tag:
+- Mark Present only if explicit words in the matching student step support that tag.
+- Mark Absent if no explicit supporting words are found.
 
-Do not penalize differences in wording, order, or phrasing as long as the correct chemical meaning is preserved.
+For every tag marked Present, quote the exact supporting words from the student answer.
 
-If the student omits an entire mechanistic step, uses an incorrect transformation type, or fails to mention any relevant concept, that step fails.
+For every tag marked Absent, write “no evidence found”.
+
+Important:
+- The number of evaluated tags must equal the number of listed concept tags.
+- If fewer tags are evaluated than listed, 1.c must be False.
+- Do not skip tags that are absent.
+- Do not summarize several tags as “all key tags”.
+- Do not infer missing tags from chemistry, mechanism, product, reaction type, or other tags.
+
+Final decision:
+- If every listed tag is Present, mark 1.c as True.
+- If any listed tag is Absent, mark 1.c as False.
 
 Step 2.  Categorization Logic - Assign Feedback Category
 
 Final Category	Requirement
-Category A	All 1.a, 1.b, and 1.c are True for every step
-Category B	Any check is False for any step
+Category A:
+All model steps pass:
+- 1.a is True globally
+- 1.b is True for every aligned step
+- 1.c is True for every step with “most key concept tags”; steps without tags count as True
 
+Category B:
+Any required check is False.
 ---
 
-## Output the category letter in the format:
-Category: X
+Rules:
+- Use only 'A' or 'B' for Category.
+- Reasoning must briefly explain the decision based on 1.a, 1.b, and 1.c.
+- For 1.c, the reasoning must include:
+ 	1.number of listed concept tags
+ 	2.number of evaluated concept tags
+ 	3.each concept tag with Present/Absent and evidence
+	If the number of evaluated tags is smaller than the number of listed concept tags, the final category must be B.
+
+- Maximum 1000 words.
+- Do not use Markdown.
+- Do not use a code block.
+- Do not add text before or after the dictionary.
 
 No additional commentary or reasoning.
+
+## Output - Return exactly one Python-style dictionary as plain text:
+
+{'Category': 'X', 'Reasoning': 'Reasoning here.'}
+

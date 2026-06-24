@@ -494,8 +494,18 @@ def compare_steps(model_canonical_full, student_canonical, acid_base = None, rog
                         pass
     else:
         # Case: Model has more reactions than student
-        individual_comparisons = {key: [] for key in range(st_len)}
-        molecular_structure = {key: None for key in range(st_len)}
+        individual_comparisons = {key: [] for key in range(st_len+1)}
+        molecular_structure = {key: None for key in range(st_len+1)}
+        # Consider whether the final compound ensamble matches the model
+        final_step = []
+        try:
+            final_step.append(student_reactions[0][-1][0])
+            final_step.append(rogue_mol.get(st_len)[0])
+        except:
+            pass
+
+        student_reactions.append((final_step,[]))
+        rogue_mol.pop(st_len)
 
         for m_idx, (m_r, m_p) in enumerate(model_reactions):
             if reaction_found:

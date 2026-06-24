@@ -3,6 +3,14 @@
 {% block title %}Exercises - CurlyArrows{% endblock %}
 
 {% block content %}
+
+<style>
+.disabled-link {
+    pointer-events: none;
+    opacity: 0.5;
+}
+</style>
+
 <div class="container mt-5">
     <div class="row">
         <div class="col-lg-10 offset-lg-1">
@@ -12,20 +20,22 @@
                 </div>
                 <div class="card-body">
                     <p class="lead">Select an exercise to practice organic reaction mechanisms.</p>
-                    
+
                     <div class="row">
                         {% for exercise in exercises %}
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card h-100">
-                                <img src="{{ url_for('static', filename='exe_img/exercise_%02d.png' % exercise) }}" 
-                                     class="card-img-top" 
+                                <img src="{{ url_for('static', filename='exe_img/exercise_%02d.png' % exercise) }}"
+                                     class="card-img-top"
                                      alt="Exercise {{ exercise }}"
                                      onerror="this.src='{{ url_for('static', filename='exe_img/exercise_%d.png' % exercise) }}'">
+
                                 <div class="card-body">
                                     <h5 class="card-title">Exercise {{ exercise }}</h5>
-                                    </p>
+
                                     <a href="{{ url_for('main.index') }}?exercise={{ exercise }}"
-                                       class="btn" style="background-color: #34B233; color: white; border: none;">
+                                       class="btn exercise-btn disabled-link"
+                                       style="background-color: #34B233; color: white; border: none;">
                                         <i class="bi bi-pencil-square"></i> Select
                                     </a>
                                 </div>
@@ -33,9 +43,19 @@
                         </div>
                         {% endfor %}
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+window.addEventListener('load', function() {
+    document.querySelectorAll('.exercise-btn').forEach(btn => {
+        btn.classList.remove('disabled-link');
+    });
+});
+</script>
+
 {% endblock %}
