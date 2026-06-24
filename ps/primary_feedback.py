@@ -43,8 +43,11 @@ def analysis_feedback(steps,transformations,mol_struc):
         else:
             issues['resonance'] = False
     
-    if steps['secondary_check']['resonance_present'] == True and steps['secondary_check']['resonance'][0][0] != True:
-        issues['resonance'] = False
+    if steps['secondary_check']['resonance_present'] == True:
+        if not steps['secondary_check']['resonance']:
+            issues['resonance'] = False
+        elif steps['secondary_check']['resonance'][0][0] != True:
+            issues['resonance'] = False
     
     if steps['rogue_species']:
         issues['rogue'] = False
